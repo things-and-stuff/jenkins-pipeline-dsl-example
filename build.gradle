@@ -1,0 +1,137 @@
+import java.util.jar.JarFile
+
+apply plugin: 'groovy'
+
+sourceSets {
+    jobs {
+        groovy {
+            srcDirs 'jobs'
+        }
+    }
+}
+
+configurations {
+    jenkins
+    compile.extendsFrom(jenkins)
+    lib
+    compile.extendsFrom(lib)
+}
+
+repositories {
+    mavenLocal()
+    maven { url "https://jitpack.io" }
+    maven { url 'http://repo.jenkins-ci.org/releases/' }
+    jcenter()
+    mavenCentral()
+}
+
+ext {
+    jenkinsVersion = '1.609.2'
+    jobDslVersion = '1.37'
+}
+
+dependencies {
+    //TODO use a proper version once published
+    lib 'com.github.things-and-stuff:jenkins-pipeline-dsl:0a064df2b2'
+    lib 'org.yaml:snakeyaml:1.16'
+
+    jenkins "org.jenkins-ci.main:jenkins-core:${project.ext.jenkinsVersion}"
+
+    compile 'org.codehaus.groovy:groovy-all:2.4.4'
+    compile 'com.google.guava:guava:18.0'
+    compile "org.jenkins-ci.plugins:job-dsl:${project.ext.jobDslVersion}@jar"
+    compile "org.jenkins-ci.plugins:job-dsl-core:${project.ext.jobDslVersion}"
+
+    testCompile('org.spockframework:spock-core:1.0-groovy-2.4') {
+        exclude module: 'groovy-all'
+    }
+    testCompile 'xmlunit:xmlunit:1.6'
+}
+
+test {
+    testLogging {
+        exceptionFormat = 'full'
+    }
+}
+
+task cleanLibs(type: Delete) {
+    delete 'lib'
+}
+
+tasks.clean.dependsOn 'cleanLibs'
+
+task libs(type: Copy) {
+    into 'lib'
+    from configurations.lib
+}
+
+if (project.hasProperty('local')) {
+
+    configurations {
+        jenkinsWar
+        jenkinsPlugins
+        compile.extendsFrom(jenkinsWar, jenkinsPlugins)
+    }
+
+    dependencies {
+        jenkinsWar (group: 'org.jenkins-ci.main', name: 'jenkins-war', version: project.ext.jenkinsVersion, ext: 'war')
+    }
+
+    apply from: 'plugins.gradle'
+
+    def jenkinsHome = new File(System.getProperty('user.home'), "${project.name}_jenkins_home")
+    if (project.hasProperty('localJenkinsHome')) {
+        jenkinsHome = new File(project.ext.localJenkinsHome)
+    }
+    def pluginsDir = new File(jenkinsHome, 'plugins/')
+
+    task copyJenkinsBaseConfig << {
+//        GFileUtils.copyFile(new File('./jenkins-bootstrap/'), jenkinsHome.absoluteFile)
+    }
+
+    task runJenkins << {
+        // copied from gradle-jpi-plugin
+        // create new configuration with plugin dependencies, ignoring the (jar) extension to get the HPI/JPI files
+        //TODO come up with a better way to start jenkins (that will not lock this gradle project)
+        Configuration plugins = project.configurations.create('plugins')
+        project.configurations.getByName('jenkinsPlugins').dependencies.each {
+            project.dependencies.add(plugins.name, "${it.group}:${it.name}:${it.version}")
+        }
+
+        // copy the resolved HPI/JPI files to the plugins directory
+        plugins.resolvedConfiguration.resolvedArtifacts.findAll { it.extension in ['hpi', 'jpi'] }.each {
+            GFileUtils.copyFile(it.file, new File(pluginsDir, "${it.name}.${it.extension}"))
+        }
+
+        // pin particular plugins
+        new File(pluginsDir.absolutePath + '/credentials.jpi.pinned').createNewFile()
+
+        System.setProperty('JENKINS_HOME', jenkinsHome.absolutePath)
+        System.setProperty('DSL_PROJECT_ROOT', project.projectDir.absolutePath)
+
+        def c = project.configurations.getByName('jenkinsWar')
+        def files = c.resolve()
+        def war = files[0]
+
+        def cl = new URLClassLoader([war.toURI().toURL()] as URL[])
+        def mainClass = new JarFile(war).manifest.mainAttributes.getValue('Main-Class')
+        cl.loadClass(mainClass).main()
+
+        Thread.currentThread().join()
+    }
+
+    runJenkins.dependsOn(copyJenkinsBaseConfig)
+    runJenkins.dependsOn(libs)
+}
+
+apply plugin: 'idea'
+
+idea {
+    module {
+        excludeDirs += file('lib')
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.7'
+}
