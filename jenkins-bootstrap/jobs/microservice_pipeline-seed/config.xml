@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@1.25">
+      <autoRebuild>false</autoRebuild>
+      <rebuildDisabled>false</rebuildDisabled>
+    </com.sonyericsson.rebuild.RebuildSettings>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.plugins.groovy.SystemGroovy>
+      <scriptSource class="hudson.plugins.groovy.StringScriptSource">
+        <command>
+import org.apache.commons.io.FileUtils
+import org.apache.commons.lang.SystemUtils
+import java.nio.file.Files
+
+def from = new File(System.getProperty('DSL_PROJECT_ROOT'))
+def to = new File(build.workspace.getRemote(), 'source')
+if (SystemUtils.IS_OS_UNIX) {
+    out.println("Symlinking project sources from $from to $to")
+    to.delete()
+    Files.createSymbolicLink(to.toPath(), from.toPath())
+} else { //Windows does not allow non-admin users to create symlinks by default
+    out.println("Copying project sources from $from to $to")
+    FileUtils.copyDirectory(from, to)
+    out.println("Copying project sources done")
+}
+        </command>
+      </scriptSource>
+      <groovyName>(Default)</groovyName>
+      <parameters></parameters>
+      <scriptParameters></scriptParameters>
+      <properties></properties>
+      <javaOpts></javaOpts>
+      <classPath></classPath>
+    </hudson.plugins.groovy.SystemGroovy>
+    <hudson.plugins.gradle.Gradle plugin="gradle@1.24">
+      <description></description>
+      <switches></switches>
+      <tasks>libs build -x test</tasks>
+      <rootBuildScriptDir>source</rootBuildScriptDir>
+      <buildFile></buildFile>
+      <gradleName>(Default)</gradleName>
+      <useWrapper>true</useWrapper>
+      <makeExecutable>false</makeExecutable>
+      <fromRootBuildScriptDir>true</fromRootBuildScriptDir>
+      <useWorkspaceAsHome>false</useWorkspaceAsHome>
+    </hudson.plugins.gradle.Gradle>
+    <javaposse.jobdsl.plugin.ExecuteDslScripts plugin="job-dsl@1.37">
+      <targets>source/jobs/microservice_pipeline.groovy</targets>
+      <usingScriptText>false</usingScriptText>
+      <ignoreExisting>false</ignoreExisting>
+      <removedJobAction>DELETE</removedJobAction>
+      <removedViewAction>DELETE</removedViewAction>
+      <lookupStrategy>JENKINS_ROOT</lookupStrategy>
+      <additionalClasspath>
+source/lib/*.jar
+source/src/main/resources
+source/src/main/groovy
+      </additionalClasspath>
+    </javaposse.jobdsl.plugin.ExecuteDslScripts>
+  </builders>
+  <publishers/>
+  <buildWrappers>
+    <EnvInjectPasswordWrapper plugin="envinject@1.92.1">
+      <injectGlobalPasswords>true</injectGlobalPasswords>
+      <maskPasswordParameters>true</maskPasswordParameters>
+      <passwordEntries/>
+    </EnvInjectPasswordWrapper>
+    <hudson.plugins.timestamper.TimestamperBuildWrapper plugin="timestamper@1.6.2"/>
+  </buildWrappers>
+</project>

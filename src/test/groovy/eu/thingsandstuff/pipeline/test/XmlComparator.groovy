@@ -7,20 +7,22 @@ import org.custommonkey.xmlunit.ElementNameAndAttributeQualifier
 import org.custommonkey.xmlunit.XMLUnit
 import org.junit.ComparisonFailure
 
-//TODO package is as a separate test lib
+//TODO package it as a separate test lib
 //TODO rethink the way files are accessed in this class
 trait XmlComparator {
 
     void compareXmls(String fileName, Node nodeToCompare) {
-        String nodeXml = XmlUtil.serialize(nodeToCompare).stripIndent().stripMargin()
+        String nodeXml = XmlUtil.serialize(nodeToCompare).stripIndent()
         def referenceXmlFile = getFileOrNull(fileName)
         if (!referenceXmlFile) {
             if (System.getProperty('outputMissingXml') == 'true') {
-                new File("./src/test/resources/${fileName}").text = nodeXml
+                def missingXml = new File("./src/test/resources/${fileName}")
+                missingXml.parentFile.mkdirs()
+                missingXml.text = nodeXml
             }
             throw new RuntimeException("Reference xml file [$fileName] not found")
         }
-        String referenceXml = XmlUtil.serialize(referenceXmlFile.text).stripIndent().stripMargin()
+        String referenceXml = XmlUtil.serialize(referenceXmlFile.text).stripIndent()
         compareXmls(fileName, referenceXml, nodeXml)
     }
 

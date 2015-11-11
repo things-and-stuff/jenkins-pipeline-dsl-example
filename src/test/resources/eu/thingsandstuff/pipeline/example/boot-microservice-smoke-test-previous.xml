@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  <actions/>
+  <description/>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <se.diabol.jenkins.pipeline.PipelineProperty>
+      <taskName>Smoke test previous</taskName>
+      <stageName>Run smoke &amp; rollback tests</stageName>
+    </se.diabol.jenkins.pipeline.PipelineProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.plugins.groovy.SystemGroovy>
+      <bindings/>
+      <classpath/>
+      <scriptSource class="hudson.plugins.groovy.StringScriptSource">
+        <command>
+out.println("This is just a dummy placeholder for 'Smoke test previous' job.")
+out.println("Will terminate in 2 seconds.")
+Thread.sleep(2 * 1000)
+</command>
+      </scriptSource>
+    </hudson.plugins.groovy.SystemGroovy>
+  </builders>
+  <publishers>
+    <au.com.centrumsystems.hudson.plugin.buildpipeline.trigger.BuildPipelineTrigger>
+      <downstreamProjectNames>boot-microservice-deploy-current-to-production</downstreamProjectNames>
+      <configs>
+        <hudson.plugins.parameterizedtrigger.CurrentBuildParameters/>
+        <hudson.plugins.parameterizedtrigger.NodeParameters/>
+      </configs>
+    </au.com.centrumsystems.hudson.plugin.buildpipeline.trigger.BuildPipelineTrigger>
+  </publishers>
+  <buildWrappers>
+    <se.diabol.jenkins.pipeline.PipelineVersionContributor>
+      <versionTemplate>${ENV,var="PIPELINE_VERSION"}</versionTemplate>
+      <updateDisplayName>true</updateDisplayName>
+    </se.diabol.jenkins.pipeline.PipelineVersionContributor>
+  </buildWrappers>
+</project>

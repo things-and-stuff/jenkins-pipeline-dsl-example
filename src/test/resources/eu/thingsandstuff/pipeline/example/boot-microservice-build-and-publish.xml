@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  <actions/>
+  <description/>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <se.diabol.jenkins.pipeline.PipelineProperty>
+      <taskName>Build and publish</taskName>
+      <stageName>Build</stageName>
+    </se.diabol.jenkins.pipeline.PipelineProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.plugins.groovy.SystemGroovy>
+      <bindings/>
+      <classpath/>
+      <scriptSource class="hudson.plugins.groovy.StringScriptSource">
+        <command>
+out.println("This is just a dummy placeholder for 'Build and publish' job.")
+out.println("Will terminate in 2 seconds.")
+Thread.sleep(2 * 1000)
+</command>
+      </scriptSource>
+    </hudson.plugins.groovy.SystemGroovy>
+  </builders>
+  <publishers>
+    <hudson.plugins.parameterizedtrigger.BuildTrigger>
+      <configs>
+        <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
+          <projects>boot-microservice-smoke-test-current</projects>
+          <condition>SUCCESS</condition>
+          <triggerWithNoParameters>true</triggerWithNoParameters>
+          <configs>
+            <hudson.plugins.parameterizedtrigger.CurrentBuildParameters/>
+            <hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+              <properties>APP_VERSION=${APP_VERSION}
+GIT_COMMIT=${GIT_COMMIT}</properties>
+            </hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+            <hudson.plugins.parameterizedtrigger.NodeParameters/>
+          </configs>
+        </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
+      </configs>
+    </hudson.plugins.parameterizedtrigger.BuildTrigger>
+  </publishers>
+  <buildWrappers>
+    <se.diabol.jenkins.pipeline.PipelineVersionContributor>
+      <versionTemplate>${ENV,var="PIPELINE_VERSION"}</versionTemplate>
+      <updateDisplayName>true</updateDisplayName>
+    </se.diabol.jenkins.pipeline.PipelineVersionContributor>
+  </buildWrappers>
+</project>

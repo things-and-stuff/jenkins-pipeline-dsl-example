@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  <actions/>
+  <description/>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <se.diabol.jenkins.pipeline.PipelineProperty>
+      <taskName>Tag release</taskName>
+      <stageName>Deploy to prod</stageName>
+    </se.diabol.jenkins.pipeline.PipelineProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.plugins.groovy.SystemGroovy>
+      <bindings/>
+      <classpath/>
+      <scriptSource class="hudson.plugins.groovy.StringScriptSource">
+        <command>
+out.println("This is just a dummy placeholder for 'Tag release' job.")
+out.println("Will terminate in 2 seconds.")
+Thread.sleep(2 * 1000)
+</command>
+      </scriptSource>
+    </hudson.plugins.groovy.SystemGroovy>
+  </builders>
+  <publishers/>
+  <buildWrappers>
+    <se.diabol.jenkins.pipeline.PipelineVersionContributor>
+      <versionTemplate>${ENV,var="PIPELINE_VERSION"}</versionTemplate>
+      <updateDisplayName>true</updateDisplayName>
+    </se.diabol.jenkins.pipeline.PipelineVersionContributor>
+  </buildWrappers>
+</project>

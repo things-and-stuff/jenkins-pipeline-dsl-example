@@ -1,3 +1,6 @@
+/runJenkins.sh
+/runJenkins.bat
+
 # Created by .ignore support plugin (hsz.mobi)
 ### Java template
 *.class
